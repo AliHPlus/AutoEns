@@ -1,1 +1,28 @@
-venv
+# ── Virtual environments ───────────────────────────────────────────────────
+venv/
+.venv/
+
+# ── Python cache ───────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# ── Generated pipeline outputs (produced at runtime by the API) ────────────
+analyses/
+features/
+models/
+
+# ── Environment / secrets ──────────────────────────────────────────────────
+.env
+*.env.*
+
+# ── OS artefacts ───────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ── Editor / IDE ───────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
