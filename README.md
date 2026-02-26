@@ -1,118 +1,156 @@
-AutoEns: An API-Based Intelligent Framework for Automated Ensemble Learning Model Development and Deployment
-============================================================================================================
+# AutoEns: An Intelligent Framework for Automated Ensemble Learning Model Development and Deployment
 
-Description
------------
+## Overview
 
-AutoEns is an intelligent API-based framework designed for automated ensemble learning model development and deployment. It streamlines the process of creating, training, and using ensemble models for various machine learning tasks.
+AutoEns is an API-based intelligent framework designed for automated ensemble learning model development and deployment. It streamlines the process of creating, training, and using ensemble models for various machine learning tasks through a four-stage pipeline:
 
-Table of Contents
------------------
-1. Introduction
-2. Getting Started
-3. API Endpoints
-    - Analyze Dataset
-    - Model Development
-    - Prediction
-4. Unit Tests
-5. Dataset Citation
-6. Contributing
-7. License
+1. **Data Analysis** - Comprehensive EDA with missing value analysis, outlier detection, and class distribution
+2. **Feature Engineering** - Automated feature importance ranking and selection
+3. **Model Development** - Adaptive ensemble training with 7 techniques and full metric evaluation
+4. **Deployment** - Real-time predictions with uncertainty quantification
 
-Introduction
---------------
-AutoEns is an API-based framework that automates the process of creating, training, and using ensemble learning models for various machine learning tasks. This documentation outlines the steps to set up and use the AutoEns framework.
+## Key Innovations
 
-Getting Started
-----------------
-To start using AutoEns, follow these steps:
+- **EDA-Driven Preprocessing**: AutoEns reads insights from exploratory data analysis to automatically configure imputation, feature selection, and class balancing
+- **Adaptive Weighted Averaging**: Ensemble weights derived from cross-validation performance rather than manual tuning
+- **Uncertainty Quantification**: Shannon entropy-based confidence scores for every prediction
+- **Comprehensive Evaluation**: Full metric suite including Accuracy, Precision, Recall, F1, AUC-ROC, MSE, RMSE, and Training Time
 
-### 1. Clone the Repository and Change Directory
-First, clone the repository and navigate into it using the following commands:
+## Installation
 
-    git clone https://github.com/alih-net/AutoEns.git # or git clone git@github.com:alih-net/AutoEns.git
-    cd AutoEns
+```bash
+# Clone the repository
+git clone https://github.com/alih-net/AutoEns.git
+cd AutoEns
 
-### 2. Create a Virtual Environment
-A virtual environment helps isolate your project's dependencies from the system-wide Python installation.
-#### On Linux/macOS
-    python3 -m virtualenv venv
-    source venv/bin/activate
+# Create and activate virtual environment
+python3 -m virtualenv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
 
-#### On Windows
-    python -m virtualenv venv
-    virtualenv\Scripts\activate
+# Install dependencies
+pip install -r requirements.txt
+```
 
-### 3. Install Dependencies
-Once the virtual environment is activated, use pip to install the required packages from the requirements.txt file.
+## Running the Application
 
-    pip install -r requirements.txt
+```bash
+python app.py
+```
 
-API Endpoints
----------------
-### 1. Analyze Dataset
-Analyze and prepare the dataset for modeling.
+The Flask server starts on `http://127.0.0.1:5000`
 
-Request:
-- Endpoint: /analyze
-- Method: POST
-- Parameters:
-    - dataset: Name of the dataset (string)
-    - label: Name of the target variable (string)
+## API Endpoints
 
-Example:
-`curl --location 'http://127.0.0.1:5000/analyze' --form 'dataset="HeartFailure"' --form 'label="HeartDisease"' `
+### 1. Data Analysis (`/analyze`)
 
-### 2. Model Development
-Develop an ensemble learning model using the pre-processed dataset.
+Performs comprehensive exploratory data analysis and generates insights for subsequent stages.
 
-Request:
-- Endpoint: /modeling
-- Method: POST
-- Parameters:
-    - dataset: Name of the dataset (string)
-    - label: Name of the target variable (string)
+**Request:**
+```bash
+curl -X POST http://127.0.0.1:5000/analyze \
+     --form 'dataset="HeartFailure"' \
+     --form 'label="HeartDisease"'
+```
 
-Example:
-`curl --location 'http://127.0.0.1:5000/modeling' --form 'dataset="HeartFailure"' --form 'label="HeartDisease"' `
+**Outputs:**
+- `bar_plot.png` - Missing values per column with annotations
+- `missing_data_heatmap.png` - Missing data visualization
+- `missing_data_analysis.csv` - Missing value statistics with completeness %
+- `outlier_analysis.csv` / `.png` - IQR-based outlier detection
+- `class_distribution.png` - Class balance visualization with imbalance ratio
+- `histograms.png` - Feature distributions with outlier fences
+- `pairplot.png` - Pairwise feature relationships
+- `correlation_heatmap.png` - Correlation matrix with significant pairs annotated
+- `analysis_report.json` - Machine-readable EDA summary
 
-### 3. Prediction
-Make predictions using the trained ensemble model.
+### 2. Feature Engineering (`/features`)
 
-Request:
-- Endpoint: /predict
-- Method: POST
-- Parameters:
-    - model: Name of the trained model (string)
-    - data: Comma-separated input data values (string)
-    - columns: Comma-separated column names corresponding to the input data (string)
+Performs feature importance ranking and selection based on 95% cumulative importance threshold.
 
-Example:
-`curl --location 'http://127.0.0.1:5000/predict' --form 'model="HeartFailure"' --form 'data="46,M,ASY,120,277,0,Normal,125,Y,1,Flat"' --form 'columns="Age,Sex,ChestPainType,RestingBloodPressure,Cholesterol,FastingBloodSugar,RestingElectrocardiography,MaxHeartRate,ExerciseAngina,Oldpeak,STSlope"' `
+**Request:**
+```bash
+curl -X POST http://127.0.0.1:5000/features \
+     --form 'dataset="HeartFailure"' \
+     --form 'label="HeartDisease"'
+```
 
-Unit Tests
------------
-To run the unit tests for this project, execute the following command:
+**Outputs:**
+- `feature_importance.csv` / `.png` - Ranked feature importance
+- `cumulative_importance.png` - Cumulative importance curve
+- `feature_profile.csv` - Per-feature type, missing %, skewness, rank
+- `selected_features.json` - Feature subset consumed by modeling
 
-`python -m unittest discover -s tests -p "*_test.py"`
+### 3. Model Development (`/modeling`)
 
-The command above will discover and run all the test files that end with _test.py in the tests directory.
+Trains 7 ensemble techniques and selects the best based on F1 (weighted) score.
 
-After running the tests, you should see an output similar to the following:
+**Request:**
+```bash
+curl -X POST http://127.0.0.1:5000/modeling \
+     --form 'dataset="HeartFailure"' \
+     --form 'label="HeartDisease"'
+```
 
-    ----------------------------------------------------------------------
-    Ran [number] tests in [time]s
+**Ensemble Techniques:**
+| Technique | Description |
+|----------|-------------|
+| Max Voting | Majority vote from base learners |
+| Averaging | Soft voting with probability averaging |
+| Weighted Averaging | CV-derived weights |
+| Stacking | Meta-learner on base predictions |
+| Bagging | Bootstrap aggregating |
+| AdaBoost | Sequential boosting |
+| Gradient Boosting | Gradient-based boosting |
 
-    OK
+**Outputs:**
+- `model.pkl` - Best trained ensemble model
+- `models.csv` - Full metrics table (Accuracy, Precision, Recall, F1, AUC-ROC, MSE, RMSE, Training Time)
+- `confusion_matrix.png` - Classification performance visualization
+- `roc_curve.png` - ROC curve (binary classification)
+- `metrics_comparison.png` - All strategies compared
+- `training_time.png` - Computational efficiency chart
+- `preprocessing_config.json` - Feature order, dropped columns, scaler/imputer config
+- `encodings.pkl`, `imputer.pkl`, `scaler.pkl` - Preprocessing artifacts
 
-Dataset Citation
--------
-As an example, this project uses the "Heart Failure Prediction Dataset" provided by fedesoriano in September 2021. Retrieved in July 2023 from Kaggle: https://www.kaggle.com/fedesoriano/heart-failure-prediction.
+### 4. Prediction (`/predict`)
 
-Contributing
--------
-We welcome contributions from the community. If you find any issues or have suggestions to improve AutoEns, please feel free to open an issue or submit a pull request. Let's collaborate to make ensemble learning more accessible and effective for everyone.
+Makes predictions with uncertainty quantification.
 
-License
--------
-This project is licensed under the GNU General Public License version 3 (GPLv3) - see the LICENSE file for details.
+**Request:**
+```bash
+curl -X POST http://127.0.0.1:5000/predict \
+     --form 'model="HeartFailure"' \
+     --form 'data="46,M,ASY,120,277,0,Normal,125,Y,1,Flat"' \
+     --form 'columns="Age,Sex,ChestPainType,RestingBloodPressure,Cholesterol,FastingBloodSugar,RestingElectrocardiography,MaxHeartRate,ExerciseAngina,Oldpeak,STSlope"'
+```
+
+**Response:**
+```
+Prediction: [1] | Probabilities: [[0.23, 0.77]] | Confidence: 77% | Uncertainty (entropy): 23%
+```
+
+## Testing
+
+```bash
+# Run all tests
+python -m unittest discover -s tests -p "*_test.py"
+
+# Run specific test
+python -m unittest tests.analyze_test
+python -m unittest tests.features_test
+python -m unittest tests.modeling_test
+python -m unittest tests.predict_test
+```
+
+## Dataset Citation
+
+This project uses the "Heart Failure Prediction Dataset" by fedesoriano (Kaggle, September 2021).  
+Available at: https://www.kaggle.com/fedesoriano/heart-failure-prediction
+
+## License
+
+This project is licensed under the GNU General Public License version 3 (GPLv3). See the LICENSE file for details.
+
+## Contributing
+
+Contributions are welcome! Please open an issue or submit a pull request to help improve AutoEns.
